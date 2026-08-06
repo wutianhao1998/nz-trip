@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "新西兰多人协同旅行规划网页 - NZ Trip Planner",
+  "engines": {
+    "node": ">=18.17.0"
+  },
   "scripts": {
     "dev": "concurrently \"npm:dev:client\" \"npm:dev:server\"",
     "dev:client": "vite",
