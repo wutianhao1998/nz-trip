@@ -1,0 +1,569 @@
+/* ================================
+   全局样式入口 - 可爱贴纸手账风格 🎀
+   ================================ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- 基础样式覆盖 ---- */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply font-sans text-ink-700 min-h-screen;
+    /* 奶油色纸 + 格纹 + 彩纸碎屑斑点 */
+    background-color: #fffdf7;
+    background-image:
+      /* 格纹纸 */
+      linear-gradient(to right, rgba(255, 202, 217, 0.09) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 202, 217, 0.09) 1px, transparent 1px),
+      /* 角落渐变光 */
+      radial-gradient(circle at 10% 10%, rgba(255, 228, 189, 0.55) 0%, transparent 45%),
+      radial-gradient(circle at 90% 15%, rgba(202, 230, 253, 0.55) 0%, transparent 45%),
+      radial-gradient(circle at 50% 100%, rgba(233, 213, 255, 0.45) 0%, transparent 50%);
+    background-size:
+      28px 28px,
+      28px 28px,
+      auto, auto, auto;
+    background-attachment: fixed;
+    color: #3f3b32;
+  }
+  /* 滚动条：草莓粉 */
+  ::-webkit-scrollbar {
+    @apply w-2.5 h-2.5;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 228, 234, 0.3);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #ffa3bd 0%, #ff6f96 100%);
+    border-radius: 999px;
+    border: 2px solid #fffdf7;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #ff6f96 0%, #fb4277 100%);
+  }
+  /* 选中文字：薄荷绿 */
+  ::selection {
+    background: rgba(112, 200, 109, 0.35);
+    color: #1f4c25;
+  }
+  /* 输入框聚焦无默认边框 */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: 0.01em;
+  }
+}
+
+/* ---- 通用组件样式 ---- */
+@layer components {
+  /* ============ 胶带（Washi Tape） ============ */
+  .washi-tape {
+    @apply absolute left-1/2 -translate-x-1/2 -top-3 h-7 w-28 md:w-36;
+    background: repeating-linear-gradient(
+      45deg,
+      #ffcad9,
+      #ffcad9 8px,
+      #ffa3bd 8px,
+      #ffa3bd 16px
+    );
+    opacity: 0.85;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transform: translateX(-50%) rotate(-2deg);
+    z-index: 5;
+    border-radius: 2px;
+  }
+  .washi-tape--lemon {
+    background: repeating-linear-gradient(
+      -45deg,
+      #fff7c2,
+      #fff7c2 8px,
+      #ffe44a 8px,
+      #ffe44a 16px
+    );
+    transform: translateX(-50%) rotate(1.5deg);
+  }
+  .washi-tape--mint {
+    background: repeating-linear-gradient(
+      45deg,
+      #c6ebc4,
+      #c6ebc4 8px,
+      #9fdc9c 8px,
+      #9fdc9c 16px
+    );
+    transform: translateX(-50%) rotate(-1deg);
+  }
+  .washi-tape--sky {
+    background: repeating-linear-gradient(
+      -45deg,
+      #bae6fd,
+      #bae6fd 8px,
+      #7dd3fc 8px,
+      #7dd3fc 16px
+    );
+    transform: translateX(-50%) rotate(2deg);
+  }
+  .washi-tape--grape {
+    background: repeating-linear-gradient(
+      45deg,
+      #e9d5ff,
+      #e9d5ff 8px,
+      #d8b4fe 8px,
+      #d8b4fe 16px
+    );
+    transform: translateX(-50%) rotate(-1.5deg);
+  }
+
+  /* ============ 手账主卡片 ============ */
+  .trip-card {
+    @apply relative bg-white rounded-[1.5rem] shadow-sticker
+           border-2 border-ink-700/10
+           transition-all duration-300 ease-out;
+    transform: rotate(-0.25deg);
+  }
+  .trip-card:hover {
+    @apply shadow-sticker-lg;
+    transform: rotate(0deg) translateY(-2px);
+  }
+  /* 卡片内彩色边框变体 */
+  .trip-card--pink {
+    @apply border-strawberry-300/60;
+    background:
+      linear-gradient(180deg, #fff5f7 0%, #ffffff 30%);
+  }
+  .trip-card--mint {
+    @apply border-primary-300/60;
+    background:
+      linear-gradient(180deg, #f3fbf3 0%, #ffffff 30%);
+  }
+  .trip-card--sky {
+    @apply border-skyblue-300/60;
+    background:
+      linear-gradient(180deg, #f0f9ff 0%, #ffffff 30%);
+  }
+  .trip-card--lemon {
+    @apply border-lemon-300/70;
+    background:
+      linear-gradient(180deg, #fffce8 0%, #ffffff 30%);
+  }
+  .trip-card--grape {
+    @apply border-grape-300/60;
+    background:
+      linear-gradient(180deg, #faf5ff 0%, #ffffff 30%);
+  }
+
+  /* ============ 便签纸（Sticky Note） ============ */
+  .sticky-note {
+    @apply relative p-4 rounded-[0.35rem] shadow-sticker-sm;
+    background: linear-gradient(180deg, #fff7c2 0%, #fff087 100%);
+    transform: rotate(-1.5deg);
+  }
+  .sticky-note::before {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    width: 60%;
+    height: 10px;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, transparent 70%);
+    transform: translateX(-50%);
+    filter: blur(2px);
+  }
+  .sticky-note--pink {
+    background: linear-gradient(180deg, #ffe4ea 0%, #ffcad9 100%);
+    transform: rotate(1deg);
+  }
+  .sticky-note--mint {
+    background: linear-gradient(180deg, #e3f5e2 0%, #c6ebc4 100%);
+    transform: rotate(-1deg);
+  }
+  .sticky-note--blue {
+    background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
+    transform: rotate(1.5deg);
+  }
+
+  /* ============ 贴纸标签 ============ */
+  .sticker-badge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs md:text-sm font-bold
+           border-2 border-dashed shadow-sticker-sm transition-transform;
+    font-family: '"Baloo 2", "Quicksand", "ZCOOL KuaiLe", sans-serif';
+  }
+  .sticker-badge:hover {
+    transform: scale(1.05) rotate(-1deg);
+  }
+  .sticker-badge--pink {
+    @apply bg-strawberry-100 text-strawberry-600 border-strawberry-300;
+  }
+  .sticker-badge--mint {
+    @apply bg-primary-100 text-primary-700 border-primary-300;
+  }
+  .sticker-badge--lemon {
+    @apply bg-lemon-100 text-lemon-600 border-lemon-300;
+  }
+  .sticker-badge--sky {
+    @apply bg-skyblue-100 text-skyblue-600 border-skyblue-300;
+  }
+  .sticker-badge--grape {
+    @apply bg-grape-100 text-grape-600 border-grape-300;
+  }
+  .sticker-badge--peach {
+    @apply bg-peach-100 text-peach-600 border-peach-300;
+  }
+
+  /* ============ 按钮家族 ============ */
+  /* 主按钮：草莓粉 */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3
+           text-white font-bold rounded-2xl
+           hover:brightness-105 active:scale-95
+           transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: linear-gradient(180deg, #ff6f96 0%, #fb4277 100%);
+    box-shadow:
+      0 3px 0 #c5144b,
+      0 6px 18px -4px rgba(251, 66, 119, 0.45);
+    letter-spacing: 0.02em;
+    font-family: '"Baloo 2", "ZCOOL KuaiLe", sans-serif';
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 4px 0 #c5144b,
+      0 10px 22px -6px rgba(251, 66, 119, 0.55);
+  }
+  .btn-primary:active {
+    transform: translateY(2px);
+    box-shadow:
+      0 1px 0 #c5144b,
+      0 3px 10px -2px rgba(251, 66, 119, 0.4);
+  }
+
+  /* 次按钮：薄荷绿贴纸风 */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           bg-white text-ink-700 rounded-2xl font-bold
+           hover:bg-primary-50 active:scale-95
+           transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    border: 2px solid #9fdc9c;
+    box-shadow:
+      0 2px 0 #70c86d,
+      0 4px 12px -4px rgba(75, 176, 74, 0.25);
+    font-family: '"Quicksand", "ZCOOL KuaiLe", sans-serif';
+  }
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+  }
+  .btn-secondary:active {
+    transform: translateY(1px);
+    box-shadow:
+      0 1px 0 #70c86d,
+      0 2px 6px -2px rgba(75, 176, 74, 0.25);
+  }
+
+  /* 危险按钮 */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           text-white rounded-2xl font-bold
+           active:scale-95
+           transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: linear-gradient(180deg, #f87171 0%, #ef4444 100%);
+    box-shadow: 0 2px 0 #b91c1c, 0 4px 12px -4px rgba(239, 68, 68, 0.35);
+  }
+
+  /* 幽灵按钮：透明贴纸感 */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-2
+           text-ink-600 rounded-xl font-semibold
+           hover:bg-strawberry-50 hover:text-strawberry-600 active:scale-95
+           transition-all duration-200;
+    border: 1.5px dashed rgba(63, 59, 50, 0.18);
+  }
+
+  /* ============ 输入框 ============ */
+  .input-base {
+    @apply w-full px-4 py-3 bg-white/90 text-ink-700
+           rounded-2xl font-medium
+           placeholder:text-ink-400 transition-all duration-200;
+    border: 2px solid #ffcad9;
+    box-shadow: inset 0 2px 4px rgba(255, 228, 234, 0.3);
+    font-family: '"Quicksand", "PingFang SC", sans-serif';
+  }
+  .input-base:focus {
+    border-color: #ff6f96;
+    box-shadow:
+      0 0 0 4px rgba(255, 163, 189, 0.35),
+      inset 0 2px 4px rgba(255, 228, 234, 0.2);
+    background: #fff;
+  }
+
+  .textarea-base {
+    @apply w-full px-4 py-3 bg-white/90 text-ink-700
+           rounded-2xl font-medium placeholder:text-ink-400 resize-none
+           transition-all duration-200;
+    border: 2px dashed #bae6fd;
+    box-shadow: inset 0 2px 4px rgba(202, 230, 253, 0.25);
+    font-family: '"Mali", "Quicksand", "PingFang SC", cursive, sans-serif';
+  }
+  .textarea-base:focus {
+    border-color: #38bdf8;
+    border-style: solid;
+    box-shadow: 0 0 0 4px rgba(186, 230, 253, 0.45);
+    background: #fff;
+  }
+
+  .select-base {
+    @apply w-full px-4 py-3 bg-white/90 text-ink-700 cursor-pointer rounded-2xl
+           font-medium transition-all duration-200 appearance-none;
+    border: 2px solid #ffe44a;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23fb4277' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    background-size: 1.35rem;
+    padding-right: 2.75rem;
+  }
+  .select-base:focus {
+    border-color: #ffd518;
+    box-shadow: 0 0 0 4px rgba(255, 228, 74, 0.45);
+  }
+
+  /* ============ 徽章/标签 ============ */
+  .tag-badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 text-[11px] md:text-xs font-bold
+           rounded-full transition-all;
+    font-family: '"Baloo 2", "ZCOOL KuaiLe", sans-serif';
+    border: 1.5px solid currentColor;
+  }
+
+  /* ============ 页面标题 ============ */
+  .page-header {
+    @apply relative flex items-center justify-between mb-6 pb-5;
+  }
+  .page-header::after {
+    content: '✿  ❀  ✿  ❀  ✿  ❀  ✿  ❀  ✿  ❀  ✿  ❀  ✿  ❀  ✿  ❀';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #ffcad9;
+    font-size: 10px;
+    letter-spacing: 4px;
+    opacity: 0.75;
+  }
+  .page-title {
+    @apply text-2xl md:text-3xl font-extrabold text-ink-800;
+    font-family: '"ZCOOL KuaiLe", "Baloo 2", "Mali", sans-serif';
+    text-shadow: 2px 2px 0 #ffcad9, 4px 4px 0 rgba(255, 202, 217, 0.35);
+  }
+  .page-subtitle {
+    @apply text-sm md:text-base text-ink-500 mt-1.5;
+    font-family: '"Mali", "Patrick Hand", cursive';
+  }
+
+  /* ============ 标题贴纸 ============ */
+  .title-sticker {
+    @apply inline-block relative px-5 py-2 rounded-[1.25rem] font-extrabold shadow-sticker;
+    font-family: '"ZCOOL KuaiLe", "Baloo 2", sans-serif';
+  }
+  .title-sticker--pink {
+    background: linear-gradient(180deg, #ffcad9 0%, #ffa3bd 100%);
+    color: #88143c;
+    transform: rotate(-1.5deg);
+  }
+  .title-sticker--mint {
+    background: linear-gradient(180deg, #c6ebc4 0%, #9fdc9c 100%);
+    color: #1f4c25;
+    transform: rotate(1deg);
+  }
+  .title-sticker--lemon {
+    background: linear-gradient(180deg, #fff087 0%, #ffe44a 100%);
+    color: #7d6400;
+    transform: rotate(-1deg);
+  }
+  .title-sticker--sky {
+    background: linear-gradient(180deg, #bae6fd 0%, #7dd3fc 100%);
+    color: #0369a1;
+    transform: rotate(1.5deg);
+  }
+  .title-sticker--grape {
+    background: linear-gradient(180deg, #e9d5ff 0%, #d8b4fe 100%);
+    color: #6b21a8;
+    transform: rotate(-0.8deg);
+  }
+
+  /* ============ 模态框：手账边框 ============ */
+  .modal-card {
+    @apply relative mx-4 md:mx-auto w-full max-w-lg max-h-[92vh] overflow-y-auto
+           bg-white rounded-[1.75rem] shadow-sticker-lg animate-pop;
+    border: 3px solid #ffa3bd;
+    background-image:
+      linear-gradient(180deg, #fff5f7 0%, #ffffff 22%, #ffffff 100%);
+  }
+  .modal-card::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 2px dashed #ffcad9;
+    border-radius: 1.35rem;
+    pointer-events: none;
+  }
+
+  /* ============ 签名页脚 ============ */
+  .signature-footer {
+    @apply mt-10 mb-28 md:mb-10 py-6 text-center;
+  }
+  .signature-footer__tape {
+    @apply inline-block relative px-8 py-2 mx-auto rounded-2xl shadow-sticker-sm;
+    background: linear-gradient(180deg, #fff087 0%, #ffe44a 100%);
+    transform: rotate(-1.2deg);
+    font-family: '"Caveat", "Patrick Hand", "Mali", cursive';
+  }
+  .signature-footer__name {
+    @apply text-2xl md:text-3xl font-bold text-ink-700;
+    text-shadow: 1.5px 1.5px 0 #fff, 3px 3px 0 rgba(251, 66, 119, 0.2);
+    letter-spacing: 0.06em;
+  }
+  .signature-footer__label {
+    @apply block text-xs md:text-sm text-ink-500 mt-1;
+    font-family: '"Mali", cursive';
+  }
+
+  /* ============ 同步提示：可爱漂浮 ============ */
+  .sync-pill {
+    @apply fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-40
+           px-4 py-2 rounded-full text-xs md:text-sm font-bold
+           shadow-sticker-lg animate-float pointer-events-none;
+    font-family: '"Baloo 2", sans-serif';
+  }
+}
+
+/* ---- 工具类 ---- */
+@layer utilities {
+  /* 安全区域适配（手机刘海屏） */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* 手写文字渐变 */
+  .text-gradient {
+    background: linear-gradient(135deg, #fb4277 0%, #ff923c 35%, #ffd518 70%, #4bb04a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* 毛玻璃导航栏（带纸胶带感） */
+  .glass-nav {
+    @apply bg-cream-50/80 backdrop-blur-xl border-b-2 border-dashed;
+    border-color: rgba(255, 163, 189, 0.45);
+  }
+  /* 底部 Tab 栏：贴纸风 */
+  .tab-bar {
+    @apply fixed bottom-0 inset-x-0 z-40 safe-bottom
+           border-t-2 border-dashed border-strawberry-300/60
+           bg-white/95 backdrop-blur-xl;
+    box-shadow: 0 -6px 22px -10px rgba(251, 66, 119, 0.25);
+  }
+  /* 拖拽占位：薄荷色贴纸感 */
+  .sortable-ghost {
+    @apply opacity-60;
+    background: rgba(198, 235, 196, 0.6) !important;
+    border: 2px dashed #70c86d !important;
+    border-radius: 1.5rem !important;
+  }
+  .sortable-chosen {
+    @apply shadow-sticker-lg;
+    transform: scale(1.02) rotate(0.5deg) !important;
+  }
+  /* 骨架屏：粉彩色 */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #ffe4ea 25%,
+      #fff7c2 40%,
+      #e0f2fe 55%,
+      #ffe4ea 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite;
+    border-radius: 1rem;
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  /* 状态点：可爱呼吸 */
+  @keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 currentColor; }
+    50% { transform: scale(1.25); opacity: 0.85; box-shadow: 0 0 0 6px rgba(255,255,255,0); }
+  }
+  .pulse-dot {
+    animation: pulse-dot 1.8s ease-in-out infinite;
+    border-radius: 999px;
+    display: inline-block;
+  }
+  /* 角落手绘装饰小花 */
+  .doodle-corner {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0.55;
+    font-size: 1.2rem;
+    z-index: 2;
+  }
+  /* 手绘下划线 */
+  .hand-underline {
+    background-image: linear-gradient(transparent 70%, #ffe44a 70%);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    padding: 0 2px;
+  }
+  /* 贴纸可交互 hover 弹跳 */
+  .sticker-hover {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s;
+  }
+  .sticker-hover:hover {
+    transform: translateY(-3px) rotate(-1deg) scale(1.03);
+  }
+  /* 彩虹分割线 */
+  .rainbow-divider {
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      #fb4277 0%, #fb923c 16%, #ffd518 33%,
+      #4bb04a 50%, #38bdf8 66%, #a855f7 83%, #ff6f96 100%
+    );
+    opacity: 0.85;
+    box-shadow: 0 2px 8px -2px rgba(251, 66, 119, 0.3);
+  }
+}
+
+/* ---- 打印样式（导出PDF时使用）---- */
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  body {
+    background: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .trip-card {
+    box-shadow: none !important;
+    border: 1.5px solid #ffcad9 !important;
+    break-inside: avoid;
+    transform: none !important;
+  }
+  .washi-tape {
+    display: none;
+  }
+}
