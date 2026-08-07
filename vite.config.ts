@@ -5,6 +5,9 @@ import path from 'path'
 // Vite 配置文件
 export default defineConfig({
   plugins: [vue()],
+  // GitHub Pages 部署在 https://用 户名.github.io/仓库名/ 下，需要设置 base
+  // 本地开发 base = '/'，GitHub Actions 构建时通过 VITE_BASE_PATH 注入
+  base: process.env.VITE_BASE_PATH || '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
