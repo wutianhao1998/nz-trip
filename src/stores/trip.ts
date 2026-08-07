@@ -123,9 +123,10 @@ export const useTripStore = defineStore('trip', () => {
     return tripDateList.value.map((date) => ({
       date,
       items: (schedules.value.get(date) || []).slice().sort((a, b) => {
-        // 先按排序字段，再按开始时间
-        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder
-        return a.timeStart.localeCompare(b.timeStart)
+        // 先按开始时间排序（从早到晚），时间相同再按添加顺序保持稳定
+        const timeCmp = a.timeStart.localeCompare(b.timeStart)
+        if (timeCmp !== 0) return timeCmp
+        return a.sortOrder - b.sortOrder
       }),
     }))
   })
