@@ -25,13 +25,16 @@ let supabaseInstance: SupabaseClient | null = null
 /** 获取 Supabase 客户端（延迟初始化，避免环境变量缺失报错） */
 export const getSupabase = (): SupabaseClient | null => {
   if (supabaseInstance) return supabaseInstance
-  const url = import.meta.env.VITE_SUPABASE_URL
+  let url = import.meta.env.VITE_SUPABASE_URL
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY
   // 如果未配置 Supabase，返回 null，降级为纯本地模式
   if (!url || !key || url === 'your_supabase_project_url') {
     console.warn('[Supabase] 未配置 VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY，已降级为本地离线模式')
     return null
   }
+  // 防御性清洗 URL：去掉末尾的 /rest/v1、/realtime/v1、多余的斜杠
+  // 避免 SDK 自动拼接后出现 /rest/v1/rest/v1/ 双重路径
+  url = url.replace(/\/(rest\/v1|realtime\/v1)\/?$/i, '').replace(/\/+$/, '')
   try {
     supabaseInstance = createClient(url, key, {
       realtime: {

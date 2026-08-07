@@ -1,6 +1,7 @@
 -- ============================================================
 -- 新西兰旅行规划 - Supabase 数据库初始化 SQL
 -- 在 Supabase SQL Editor 中一次性执行以下脚本
+-- trip_id 必须与 src/utils/constants.ts 中的 DEFAULT_TRIP_ID 一致
 -- ============================================================
 
 -- 启用必要扩展
@@ -12,7 +13,7 @@ create extension if not exists "pgcrypto";
 -- ============================================================
 create table if not exists public.travel_schedule (
     id uuid primary key default gen_random_uuid(),
-    trip_id text not null default 'default-trip',
+    trip_id text not null default 'nz-trip-demo-2024',
     date text not null,                   -- YYYY-MM-DD
     items jsonb not null default '[]'::jsonb,  -- ScheduleItem[]
     updated_by text not null default 'system',
@@ -26,7 +27,7 @@ create table if not exists public.travel_schedule (
 -- ============================================================
 create table if not exists public.travel_order (
     id uuid primary key default gen_random_uuid(),
-    trip_id text not null unique default 'default-trip',
+    trip_id text not null unique default 'nz-trip-demo-2024',
     orders jsonb not null default '[]'::jsonb,  -- OrderItem[]
     updated_by text not null default 'system',
     updated_at timestamptz not null default now()
@@ -38,7 +39,7 @@ create table if not exists public.travel_order (
 -- ============================================================
 create table if not exists public.travel_notice (
     id uuid primary key default gen_random_uuid(),
-    trip_id text not null unique default 'default-trip',
+    trip_id text not null unique default 'nz-trip-demo-2024',
     notice jsonb not null default '{}'::jsonb,     -- NoticeData
     messages jsonb not null default '[]'::jsonb,   -- ChatMessage[]
     updated_by text not null default 'system',
@@ -126,13 +127,13 @@ for each row execute function public.handle_updated_at();
 -- ============================================================
 -- 默认订单行（如果不存在则插入）
 insert into public.travel_order (trip_id, orders, updated_by)
-values ('default-trip', '[]'::jsonb, 'init')
+values ('nz-trip-demo-2024', '[]'::jsonb, 'init')
 on conflict (trip_id) do nothing;
 
 -- 默认注意事项行
 insert into public.travel_notice (trip_id, notice, messages, updated_by)
 values (
-    'default-trip',
+    'nz-trip-demo-2024',
     '{
       "globalNotices": {
         "entryCustoms": "1. 禁止携带：新鲜动植物制品、蜂蜜、种子、肉类、蛋类等\n2. 所有食品必须申报，未申报重罚$400+\n3. 每人限带50支香烟或50g烟草，烈酒不超1.125L\n4. 携带现金超1万纽币必须申报",
