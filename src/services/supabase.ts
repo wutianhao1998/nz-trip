@@ -15,6 +15,7 @@ import type {
   DBScheduleRow,
   DBOrderRow,
   DBNoticeRow,
+  DBSettingsRow,
 } from '@/types'
 import { DEFAULT_TRIP_ID } from '@/utils/constants'
 import { generateId } from '@/utils'
@@ -64,12 +65,14 @@ export interface DBChangeHandlers {
   onScheduleChange?: (date: string, items: ScheduleItem[]) => void
   onOrderChange?: (orders: OrderItem[]) => void
   onNoticeChange?: (notice: NoticeData, messages: ChatMessage[]) => void
+  onSettingsChange?: (startDate: string, endDate: string) => void
 }
 
 // 当前订阅频道集合（便于取消）
 let scheduleChannel: RealtimeChannel | null = null
 let orderChannel: RealtimeChannel | null = null
 let noticeChannel: RealtimeChannel | null = null
+let settingsChannel: RealtimeChannel | null = null
 
 /**
  * 订阅所有表的 Realtime 变更
@@ -142,6 +145,26 @@ export const subscribeRealtime = (handlers: DBChangeHandlers): void => {
       }
     )
     .subscribe()
+
+  // ---- 订阅旅行配置（起止日期）变更 ----
+  settingsChannel = sb
+    .channel('public:travel_settings')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'travel_settings',
+        filter: `trip_id=eq.${tripId}`,
+      },
+      (payload) => {
+        const newRow = payload.new as DBSettingsRow | null
+        if (newRow && handlers.onSettingsChange) {
+          handlers.onSettingsChange(newRow.start_date, newRow.end_date)
+        }
+      }
+    )
+    .subscribe()
 }
 
 /** 取消所有订阅（组件卸载时调用） */
@@ -151,7 +174,8 @@ export const unsubscribeRealtime = (): void => {
   if (scheduleChannel) sb.removeChannel(scheduleChannel)
   if (orderChannel) sb.removeChannel(orderChannel)
   if (noticeChannel) sb.removeChannel(noticeChannel)
-  scheduleChannel = orderChannel = noticeChannel = null
+  if (settingsChannel) sb.removeChannel(settingsChannel)
+  scheduleChannel = orderChannel = noticeChannel = settingsChannel = null
 }
 
 // ================================
@@ -367,6 +391,59 @@ export const appendChatMessage = async (
     return true
   } catch (e) {
     console.error('[DB] 追加留言失败:', e)
+    return false
+  }
+}
+
+// ================================
+// 旅行配置 CRUD（起止日期，支持多人协同同步）
+// ================================
+
+/** 拉取旅行配置（起止日期） */
+export const fetchTripSettings = async (): Promise<{
+  startDate: string
+  endDate: string
+} | null> => {
+  const sb = getSupabase()
+  if (!sb) return null
+  try {
+    const { data, error } = await sb
+      .from('travel_settings')
+      .select('start_date, end_date')
+      .eq('trip_id', DEFAULT_TRIP_ID)
+      .maybeSingle()
+    if (error) throw error
+    const row = data as DBSettingsRow | null
+    if (!row) return null
+    return { startDate: row.start_date, endDate: row.end_date }
+  } catch (e) {
+    console.error('[DB] 拉取旅行配置失败:', e)
+    return null
+  }
+}
+
+/** 保存旅行配置（upsert） */
+export const saveTripSettings = async (
+  startDate: string,
+  endDate: string,
+  updatedBy: string
+): Promise<boolean> => {
+  const sb = getSupabase()
+  if (!sb) return false
+  try {
+    const { error } = await sb.from('travel_settings').upsert(
+      {
+        trip_id: DEFAULT_TRIP_ID,
+        start_date: startDate,
+        end_date: endDate,
+        updated_by: updatedBy,
+      },
+      { onConflict: 'trip_id' }
+    )
+    if (error) throw error
+    return true
+  } catch (e) {
+    console.error('[DB] 保存旅行配置失败:', e)
     return false
   }
 }

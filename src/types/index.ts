@@ -240,3 +240,13 @@ export interface DBNoticeRow {
   updated_by: string;
   updated_at?: string;
 }
+
+/** travel_settings 表 —— 旅行配置（起止日期等），支持多人协同同步 */
+export interface DBSettingsRow {
+  id?: string;
+  trip_id: string;
+  start_date: string;     // YYYY-MM-DD
+  end_date: string;       // YYYY-MM-DD
+  updated_by: string;
+  updated_at?: string;
+}

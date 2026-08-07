@@ -28,15 +28,16 @@ const selectedCity = ref(NZ_CITIES[0].code) // 默认奥克兰
 const refreshing = ref(false)
 
 // 城市按钮颜色映射（不同颜色贴纸）
-const cityColorMap: Record<string, { card: string; badge: string; tape: string }> = {
-  'AKL': { card: 'trip-card--pink',  badge: 'sticker-badge--pink',  tape: 'washi-tape--pink' },
-  'ZQN': { card: 'trip-card--grape', badge: 'sticker-badge--grape', tape: 'washi-tape--grape' },
-  'CHC': { card: 'trip-card--lemon', badge: 'sticker-badge--lemon', tape: 'washi-tape--lemon' },
-  'WAN': { card: 'trip-card--mint',  badge: 'sticker-badge--mint',  tape: 'washi-tape--mint' },
-  'MTC': { card: 'trip-card--sky',   badge: 'sticker-badge--sky',   tape: 'washi-tape--sky' },
-  'MIL': { card: 'trip-card--sky',   badge: 'sticker-badge--sky',   tape: 'washi-tape--sky' },
-  'WLG': { card: 'trip-card--pink',  badge: 'sticker-badge--peach', tape: 'washi-tape--pink' },
-  'ROT': { card: 'trip-card--lemon', badge: 'sticker-badge--lemon', tape: 'washi-tape--lemon' },
+// selected: 选中态实心渐变背景（深色系，保证白色文字可读）
+const cityColorMap: Record<string, { card: string; badge: string; tape: string; selected: string }> = {
+  'AKL': { card: 'trip-card--pink',  badge: 'sticker-badge--pink',  tape: 'washi-tape--pink',  selected: 'bg-gradient-to-br from-strawberry-500 to-strawberry-400' },
+  'ZQN': { card: 'trip-card--grape', badge: 'sticker-badge--grape', tape: 'washi-tape--grape', selected: 'bg-gradient-to-br from-grape-500 to-grape-400' },
+  'CHC': { card: 'trip-card--lemon', badge: 'sticker-badge--lemon', tape: 'washi-tape--lemon', selected: 'bg-gradient-to-br from-lemon-600 to-lemon-500' },
+  'WAN': { card: 'trip-card--mint',  badge: 'sticker-badge--mint',  tape: 'washi-tape--mint',  selected: 'bg-gradient-to-br from-primary-500 to-primary-400' },
+  'MTC': { card: 'trip-card--sky',   badge: 'sticker-badge--sky',   tape: 'washi-tape--sky',   selected: 'bg-gradient-to-br from-skyblue-500 to-skyblue-400' },
+  'MIL': { card: 'trip-card--sky',   badge: 'sticker-badge--sky',   tape: 'washi-tape--sky',   selected: 'bg-gradient-to-br from-skyblue-500 to-skyblue-400' },
+  'WLG': { card: 'trip-card--pink',  badge: 'sticker-badge--peach', tape: 'washi-tape--pink',  selected: 'bg-gradient-to-br from-peach-500 to-peach-400' },
+  'ROT': { card: 'trip-card--lemon', badge: 'sticker-badge--lemon', tape: 'washi-tape--lemon', selected: 'bg-gradient-to-br from-lemon-600 to-lemon-500' },
 }
 
 const currentCityWeather = computed(
@@ -136,7 +137,7 @@ const uvLevel = (uv: number) => {
           type="button"
           class="relative p-2.5 md:p-3 rounded-2xl transition-all text-left sticker-hover border-2 min-h-[80px]"
           :class="selectedCity === city.code
-            ? `${cityColorMap[city.code].card.replace('trip-card--', 'bg-gradient-to-br from-')} text-white shadow-sticker border-transparent border-white`
+            ? `${cityColorMap[city.code].selected} text-white shadow-sticker border-transparent`
             : 'bg-white border-dashed border-ink-200/50 text-ink-600 hover:border-strawberry-200'"
           :style="{ transform: `rotate(${cIdx % 3 === 0 ? '-0.6' : cIdx % 3 === 1 ? '0.8' : '-0.3'}deg)` }"
           @click="selectedCity = city.code"

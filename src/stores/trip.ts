@@ -32,6 +32,8 @@ import {
   fetchNoticeAndMessages,
   saveNoticeData,
   appendChatMessage,
+  fetchTripSettings,
+  saveTripSettings,
   subscribeRealtime,
   unsubscribeRealtime,
 } from '@/services/supabase'
@@ -216,10 +218,11 @@ export const useTripStore = defineStore('trip', () => {
     isSyncing.value = true
     try {
       // 并行拉取
-      const [schedMap, orderList, noticeRes] = await Promise.all([
+      const [schedMap, orderList, noticeRes, settingsRes] = await Promise.all([
         fetchAllSchedules(),
         fetchAllOrders(),
         fetchNoticeAndMessages(),
+        fetchTripSettings(),
       ])
       // 应用数据（云端优先，空数据才用本地兜底）
       schedules.value = schedMap.size > 0 ? schedMap : schedules.value
@@ -228,6 +231,19 @@ export const useTripStore = defineStore('trip', () => {
         noticeData.value = noticeRes.notice
       }
       messages.value = noticeRes.messages.length > 0 ? noticeRes.messages : messages.value
+      // 应用云端旅行日期（覆盖本地默认值，实现多人同步）
+      if (settingsRes) {
+        tripStartDate.value = settingsRes.startDate
+        tripEndDate.value = settingsRes.endDate
+        // 补齐新日期范围的空行程骨架
+        const dates = generateDateRange(settingsRes.startDate, settingsRes.endDate)
+        dates.forEach((d) => {
+          if (!schedules.value.has(d)) {
+            schedules.value.set(d, [])
+          }
+        })
+        schedules.value = new Map(schedules.value)
+      }
 
       lastSyncAt.value = Date.now()
       addLog('schedule', 'update', '从云端同步行程数据')
@@ -245,6 +261,19 @@ export const useTripStore = defineStore('trip', () => {
         onNoticeChange: (notice, msgs) => {
           noticeData.value = notice
           messages.value = msgs
+        },
+        onSettingsChange: (startDate, endDate) => {
+          // 其他协作者修改了旅行日期，实时同步
+          tripStartDate.value = startDate
+          tripEndDate.value = endDate
+          const ds = generateDateRange(startDate, endDate)
+          ds.forEach((d) => {
+            if (!schedules.value.has(d)) {
+              schedules.value.set(d, [])
+            }
+          })
+          schedules.value = new Map(schedules.value)
+          addLog('schedule', 'update', `协作者更新了旅行日期：${startDate} 至 ${endDate}`)
         },
       })
     } catch (e) {
@@ -338,7 +367,7 @@ export const useTripStore = defineStore('trip', () => {
   // Actions - 行程 CRUD
   // ============================
 
-  /** 更新旅行起止日期（会自动补齐缺失日期的空行程） */
+  /** 更新旅行起止日期（会自动补齐缺失日期的空行程，并同步到云端） */
   const updateTripDates = (start: string, end: string) => {
     tripStartDate.value = start
     tripEndDate.value = end
@@ -353,6 +382,10 @@ export const useTripStore = defineStore('trip', () => {
     schedules.value = new Map(schedules.value)
     addLog('schedule', 'update', `调整行程日期：${start} 至 ${end}`)
     void syncDaySchedule(start, true) // 只选个代表性的同步
+    // 同步旅行日期到 Supabase，让其他协作者实时收到变更
+    if (currentUser.value && isSupabaseReady()) {
+      void saveTripSettings(start, end, currentUser.value.nickname)
+    }
   }
 
   /** 同步单日行程到云端 */

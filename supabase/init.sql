@@ -47,6 +47,19 @@ create table if not exists public.travel_notice (
 );
 
 -- ============================================================
+-- 4. 旅行配置表 travel_settings
+-- 按 trip_id 存储旅行起止日期，支持多人协同同步
+-- ============================================================
+create table if not exists public.travel_settings (
+    id uuid primary key default gen_random_uuid(),
+    trip_id text not null unique default 'nz-trip-demo-2024',
+    start_date text not null,              -- YYYY-MM-DD
+    end_date text not null,                -- YYYY-MM-DD
+    updated_by text not null default 'system',
+    updated_at timestamptz not null default now()
+);
+
+-- ============================================================
 -- RLS (行级安全) 配置 - 开启匿名访问（因为无注册登录，简化使用）
 -- 生产环境建议根据 trip_id 做更细粒度的权限控制
 -- ============================================================
@@ -78,6 +91,14 @@ create policy "allow_all_notice" on public.travel_notice
     using (true)
     with check (true);
 
+-- travel_settings
+alter table public.travel_settings enable row level security;
+drop policy if exists "allow_all_settings" on public.travel_settings;
+create policy "allow_all_settings" on public.travel_settings
+    for all
+    using (true)
+    with check (true);
+
 -- ============================================================
 -- Realtime 订阅配置 - 开启3张表的实时广播
 -- ============================================================
@@ -90,11 +111,13 @@ commit;
 alter publication supabase_realtime add table public.travel_schedule;
 alter publication supabase_realtime add table public.travel_order;
 alter publication supabase_realtime add table public.travel_notice;
+alter publication supabase_realtime add table public.travel_settings;
 
 -- 设置 replica identity 为 full，让订阅可以收到完整变更前后数据
 alter table public.travel_schedule replica identity full;
 alter table public.travel_order replica identity full;
 alter table public.travel_notice replica identity full;
+alter table public.travel_settings replica identity full;
 
 -- ============================================================
 -- 4. 自动更新时间触发器
@@ -120,6 +143,11 @@ for each row execute function public.handle_updated_at();
 drop trigger if exists set_timestamp_notice on public.travel_notice;
 create trigger set_timestamp_notice
 before update on public.travel_notice
+for each row execute function public.handle_updated_at();
+
+drop trigger if exists set_timestamp_settings on public.travel_settings;
+create trigger set_timestamp_settings
+before update on public.travel_settings
 for each row execute function public.handle_updated_at();
 
 -- ============================================================
@@ -174,6 +202,16 @@ values (
       ]
     }'::jsonb,
     '[]'::jsonb,
+    'init'
+)
+on conflict (trip_id) do nothing;
+
+-- 默认旅行配置行（今天起14天，后续由前端覆盖为实际日期）
+insert into public.travel_settings (trip_id, start_date, end_date, updated_by)
+values (
+    'nz-trip-demo-2024',
+    to_char(now(), 'YYYY-MM-DD'),
+    to_char(now() + interval '13 days', 'YYYY-MM-DD'),
     'init'
 )
 on conflict (trip_id) do nothing;
