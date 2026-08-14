@@ -1,7 +1,7 @@
 // ================================
-// 布局组件：AppLayout - 可爱贴纸手账风 🎀
-//   - 胶带顶栏 + 贴纸标题
-//   - 糖果色 TabBar / Nav
+// 布局组件：AppLayout - 自然清新风
+//   - 干净白底导航栏
+//   - 简洁 TabBar / Nav
 //   - 签名页脚 "Design by wutianhao"
 // ================================
 <script setup lang="ts">
@@ -21,6 +21,8 @@ import {
   IconEdit,
   IconUsers,
 } from '@/components/icons'
+import { CURRENCIES } from '@/utils/constants'
+import type { Currency } from '@/types'
 import type { RouteRecordRaw } from 'vue-router'
 import { exportFullTripPDF } from '@/utils/exportPdf'
 
@@ -103,33 +105,24 @@ const handleExport = async () => {
 
 <template>
   <div class="min-h-screen flex flex-col relative">
-    <!-- ================= 顶部导航：胶带+贴纸风 ================= -->
+    <!-- ================= 顶部导航：自然清新风 ================= -->
     <header class="no-print sticky top-0 z-30 safe-top">
-      <!-- 胶带装饰（横跨页面上方） -->
-      <div class="relative h-5 md:h-7 pointer-events-none overflow-hidden">
-        <div class="washi-tape !-top-0.5 !h-6 md:!h-8 washi-tape--lemon" style="width: 42%; left: 20%" />
-        <div class="washi-tape !-top-1 !h-6 md:!h-8 washi-tape--mint" style="width: 30%; left: 62%; transform: translateX(-50%) rotate(1.5deg)" />
-      </div>
-
-      <div class="bg-white/80 backdrop-blur-md border-b-2 border-dashed border-strawberry-200 shadow-washi">
+      <div class="bg-white/90 backdrop-blur-md border-b border-ink-200/50 shadow-sm">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
-          <!-- 左：Logo + 贴纸标题 -->
+          <!-- 左：Logo + 标题 -->
           <div class="flex items-center gap-3 min-w-0">
-            <!-- 新西兰国旗贴纸 -->
-            <div class="relative shrink-0">
-              <div class="w-11 h-11 md:w-12 md:h-12 rounded-[1.1rem] bg-gradient-to-br from-skyblue-300 via-skyblue-400 to-skyblue-600 flex items-center justify-center shadow-sticker-sm border-2 border-white">
+            <!-- Logo -->
+            <div class="shrink-0">
+              <div class="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-skyblue-100 flex items-center justify-center">
                 <span class="text-2xl">🐑</span>
               </div>
-              <!-- 小爱心贴纸 -->
-              <span class="absolute -top-1.5 -right-1.5 text-lg animate-float">💕</span>
             </div>
             <div class="min-w-0">
-              <!-- 贴纸标题 -->
+              <!-- 标题 -->
               <div class="flex items-center gap-2">
                 <span :class="['title-sticker !px-3.5 !py-1 !text-lg md:!text-xl', titleStickerColor]">
                   {{ currentTitle }}
                 </span>
-                <span class="hidden md:inline text-xl animate-wiggle">✨</span>
               </div>
               <!-- 用户信息：便签风 -->
               <div class="flex items-center gap-2 mt-2">
@@ -137,7 +130,7 @@ const handleExport = async () => {
                   class="w-2.5 h-2.5 rounded-full shrink-0 ring-2 ring-white shadow-sm"
                   :style="{ background: store.currentUser?.color }"
                 />
-                <span class="text-xs md:text-sm text-ink-600 font-bold truncate font-hand">
+                <span class="text-xs md:text-sm text-ink-600 font-bold truncate">
                   @{{ store.currentUser?.nickname }}
                 </span>
                 <span
@@ -163,7 +156,7 @@ const handleExport = async () => {
               <IconDownload :size="18" :class="exporting ? 'animate-bounce' : ''" />
               <!-- 悬停显示小贴纸 -->
               <span class="hidden md:block absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] bg-white border border-lemon-300 text-lemon-700 px-2 py-0.5 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-sm">
-                导出PDF 📒
+                导出PDF
               </span>
             </button>
             <button
@@ -190,8 +183,8 @@ const handleExport = async () => {
                     <IconUsers :size="18" class="text-grape-700" />
                   </div>
                   <div>
-                    <div class="font-bold text-ink-800 text-sm md:text-base">🎨 编辑权限</div>
-                    <div class="text-xs text-ink-500 font-hand">切换同伴协作模式</div>
+                    <div class="font-bold text-ink-800 text-sm md:text-base">编辑权限</div>
+                    <div class="text-xs text-ink-500">切换同伴协作模式</div>
                   </div>
                 </div>
                 <div class="flex gap-1.5 bg-white p-1 rounded-2xl border-2 border-dashed border-grape-200 shadow-sm">
@@ -202,7 +195,7 @@ const handleExport = async () => {
                       : 'text-ink-500 hover:text-ink-700'"
                     @click="store.toggleEditorMode(true)"
                   >
-                    <IconEdit :size="12" class="inline mr-1" />编辑模式 ✏️
+                    <IconEdit :size="12" class="inline mr-1" />编辑模式
                   </button>
                   <button
                     class="px-3 py-1.5 text-xs md:text-sm font-bold rounded-xl transition-all"
@@ -211,7 +204,7 @@ const handleExport = async () => {
                       : 'text-ink-500 hover:text-ink-700'"
                     @click="store.toggleEditorMode(false)"
                   >
-                    <IconEye :size="12" class="inline mr-1" />只读模式 👀
+                    <IconEye :size="12" class="inline mr-1" />只读模式
                   </button>
                 </div>
               </div>
@@ -220,19 +213,18 @@ const handleExport = async () => {
             <!-- 小提示便签 -->
             <div class="sticky-note sticky-note--pink !rotate-0">
               <div class="text-xs md:text-sm font-bold text-strawberry-800">
-                💡 小贴士：点击上方下载按钮 📒，可以一键导出完整「新西兰旅行手账 PDF」，
-                包含行程、订单、注意事项，直接打印出来贴在手账本上超可爱哦～
+                小贴士：点击上方下载按钮，可一键导出完整「新西兰旅行手账 PDF」，包含行程、订单与注意事项。
               </div>
             </div>
 
             <!-- 日期配置 -->
             <div class="trip-card trip-card--sky !rounded-2xl p-3 md:p-4">
-              <div class="font-bold text-ink-800 text-sm md:text-base mb-3 flex items-center gap-2">
-                <span class="text-xl">📅</span> 旅行时间安排
+              <div class="font-bold text-ink-800 text-sm md:text-base mb-3">
+                旅行时间安排
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-xs text-ink-500 mb-1.5 font-hand">✨ 出发日</label>
+                  <label class="block text-xs text-ink-500 mb-1.5">出发日</label>
                   <input
                     type="date"
                     class="input-base py-2.5 text-sm"
@@ -245,7 +237,7 @@ const handleExport = async () => {
                   />
                 </div>
                 <div>
-                  <label class="block text-xs text-ink-500 mb-1.5 font-hand">🏠 返程日</label>
+                  <label class="block text-xs text-ink-500 mb-1.5">返程日</label>
                   <input
                     type="date"
                     class="input-base py-2.5 text-sm"
@@ -260,31 +252,62 @@ const handleExport = async () => {
               </div>
             </div>
 
+            <!-- 汇率配置 -->
+            <div class="trip-card trip-card--lemon !rounded-2xl p-3 md:p-4">
+              <div class="font-bold text-ink-800 text-sm md:text-base mb-3">
+                汇率设置（对人民币）
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div v-for="cur in CURRENCIES.filter((c) => c.code !== 'CNY')" :key="cur.code">
+                  <label class="block text-xs text-ink-500 mb-1.5">
+                    {{ cur.flag }} 1 {{ cur.code }} =
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="input-base py-2 text-sm flex-1"
+                      :value="store.exchangeRates[cur.code as Currency]"
+                      @change="(e) => {
+                        const val = Number((e.target as HTMLInputElement).value)
+                        if (val > 0) store.updateExchangeRate(cur.code as Currency, val)
+                      }"
+                    />
+                    <span class="text-sm font-bold text-ink-700 shrink-0">CNY</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-3 text-xs text-ink-500">
+                汇率用于订单总金额自动换算为人民币汇总，可按实际汇率调整
+              </div>
+            </div>
+
             <!-- 数据概览：4个小卡片 -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-3 pt-1">
-              <div class="trip-card trip-card--mint !rounded-2xl p-3 text-center !rotate-0">
-                <div class="text-2xl md:text-3xl font-extrabold text-primary-700 font-sticker">
+              <div class="trip-card trip-card--mint !rounded-2xl p-3 text-center">
+                <div class="text-2xl md:text-3xl font-extrabold text-primary-700">
                   {{ store.totalTripDays }}
                 </div>
-                <div class="text-[11px] md:text-xs text-ink-500 mt-1 font-hand">旅行天数 🗓️</div>
+                <div class="text-[11px] md:text-xs text-ink-500 mt-1">旅行天数</div>
               </div>
-              <div class="trip-card trip-card--sky !rounded-2xl p-3 text-center !rotate-0">
-                <div class="text-2xl md:text-3xl font-extrabold text-skyblue-700 font-sticker">
+              <div class="trip-card trip-card--sky !rounded-2xl p-3 text-center">
+                <div class="text-2xl md:text-3xl font-extrabold text-skyblue-700">
                   {{ store.totalScheduleItems }}
                 </div>
-                <div class="text-[11px] md:text-xs text-ink-500 mt-1 font-hand">行程条目 🎯</div>
+                <div class="text-[11px] md:text-xs text-ink-500 mt-1">行程条目</div>
               </div>
-              <div class="trip-card trip-card--lemon !rounded-2xl p-3 text-center !rotate-0">
-                <div class="text-2xl md:text-3xl font-extrabold text-lemon-700 font-sticker">
+              <div class="trip-card trip-card--lemon !rounded-2xl p-3 text-center">
+                <div class="text-2xl md:text-3xl font-extrabold text-lemon-700">
                   {{ store.paidOrderCount }}/{{ store.orders.length }}
                 </div>
-                <div class="text-[11px] md:text-xs text-ink-500 mt-1 font-hand">订单进度 🎫</div>
+                <div class="text-[11px] md:text-xs text-ink-500 mt-1">订单进度</div>
               </div>
-              <div class="trip-card trip-card--pink !rounded-2xl p-3 text-center !rotate-0">
-                <div class="text-2xl md:text-3xl font-extrabold text-strawberry-700 font-sticker">
+              <div class="trip-card trip-card--pink !rounded-2xl p-3 text-center">
+                <div class="text-2xl md:text-3xl font-extrabold text-strawberry-700">
                   {{ store.packedInventoryCount }}/{{ store.totalInventoryCount }}
                 </div>
-                <div class="text-[11px] md:text-xs text-ink-500 mt-1 font-hand">行李清单 🎒</div>
+                <div class="text-[11px] md:text-xs text-ink-500 mt-1">行李清单</div>
               </div>
             </div>
           </div>
@@ -292,20 +315,19 @@ const handleExport = async () => {
       </transition>
     </header>
 
-    <!-- ================= 桌面端快捷 Nav：贴纸胶囊 ================= -->
+    <!-- ================= 桌面端快捷 Nav ================= -->
     <nav class="no-print hidden md:flex max-w-5xl w-full mx-auto px-4 gap-2 pt-4 pb-2 flex-wrap">
       <button
         v-for="tab in tabs"
         :key="tab.name"
         class="group px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-1.5 border-2 border-dashed relative"
         :class="route.name === tab.name
-          ? 'bg-strawberry-100 text-strawberry-700 border-strawberry-300 shadow-sticker-sm scale-105 -rotate-0.5'
+          ? 'bg-strawberry-100 text-strawberry-700 border-strawberry-300 shadow-sticker-sm scale-105'
           : 'bg-white text-ink-600 hover:bg-cream-100 border-ink-200/40 hover:border-strawberry-200'"
         @click="router.push({ name: tab.name })"
       >
         <component :is="iconMap[tab.icon] || IconHome" :size="16" />
         {{ tab.title }}
-        <span v-if="route.name === tab.name" class="absolute -top-2 -right-1 text-xs animate-sparkle">✨</span>
       </button>
     </nav>
 
@@ -319,35 +341,19 @@ const handleExport = async () => {
 
       <!-- ============ 签名页脚：Design by wutianhao ============ -->
       <footer class="signature-footer" aria-label="作者签名">
-        <!-- 胶带装饰 -->
-        <div class="relative inline-block">
-          <div class="washi-tape !top-0 !h-6 !w-40 washi-tape--pink" style="transform: translateX(-50%) rotate(-3deg)" />
-          <div class="signature-footer__tape">
-            <span class="signature-footer__name">✿ design by wutianhao ✿</span>
-            <span class="signature-footer__label">
-              ~ NZ Trip Journal · made with 💕 for my friends ~
-            </span>
-          </div>
-          <!-- 周围小贴纸 -->
-          <span class="absolute -left-10 top-1/2 -translate-y-1/2 text-2xl animate-float" style="animation-delay: 0.4s">🌸</span>
-          <span class="absolute -right-8 top-0 text-xl animate-wiggle">🌟</span>
-          <span class="absolute -right-4 -bottom-2 text-lg animate-float" style="animation-delay: 0.8s">🍡</span>
-          <span class="absolute -left-6 -bottom-3 text-xl animate-wiggle" style="animation-delay: 0.2s">🦋</span>
-        </div>
-
-        <!-- 额外小花边 -->
-        <div class="mt-6 text-center text-ink-400 text-xs font-hand tracking-widest">
-          ✦ ✧ ❀ ✿ ❁ ✾ ✽ ❋ ✦ ✧ ❀ ✿ ❁ ✾ ✽ ❋ ✦
+        <div class="signature-footer__tape">
+          <span class="signature-footer__name">design by wutianhao</span>
+          <span class="signature-footer__label">NZ Trip Journal · made for my friends</span>
         </div>
       </footer>
     </main>
 
-    <!-- ================= 移动端底部 TabBar：糖果色 ================= -->
-    <nav class="no-print md:hidden glass-nav fixed bottom-3 left-3 right-3 z-30 rounded-[1.5rem] border-2 border-white shadow-sticker-lg overflow-hidden"
-         style="background: linear-gradient(180deg, rgba(255,253,247,0.98) 0%, rgba(255,245,247,0.98) 100%); backdrop-filter: blur(10px)">
+    <!-- ================= 移动端底部 TabBar ================= -->
+    <nav class="no-print md:hidden glass-nav fixed bottom-3 left-3 right-3 z-30 rounded-[1.5rem] border border-ink-200/50 shadow-lg overflow-hidden"
+         style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px)">
       <div class="grid grid-cols-6 gap-0.5 px-1.5 py-2.5">
         <button
-          v-for="(tab, idx) in tabs"
+          v-for="tab in tabs"
           :key="tab.name"
           class="relative flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-2xl transition-all duration-300"
           :class="route.name === tab.name
@@ -355,19 +361,10 @@ const handleExport = async () => {
             : 'text-ink-500'"
           @click="router.push({ name: tab.name })"
         >
-          <!-- 选中态：贴纸背景 -->
+          <!-- 选中态背景 -->
           <div
             v-if="route.name === tab.name"
-            class="absolute inset-0 rounded-2xl"
-            :class="[
-              idx % 5 === 0 ? 'bg-strawberry-200/70' :
-              idx % 5 === 1 ? 'bg-primary-200/70' :
-              idx % 5 === 2 ? 'bg-lemon-200/80' :
-              idx % 5 === 3 ? 'bg-skyblue-200/70' :
-              idx % 5 === 4 ? 'bg-grape-200/70' :
-              'bg-peach-200/70'
-            ]"
-            style="transform: rotate(-1deg)"
+            class="absolute inset-0 rounded-2xl bg-primary-100"
           />
           <component
             :is="iconMap[tab.icon] || IconHome"
@@ -375,14 +372,7 @@ const handleExport = async () => {
             :stroke-width="route.name === tab.name ? 2.6 : 2"
             :class="[
               'relative z-10',
-              route.name === tab.name ? (
-                idx % 5 === 0 ? 'text-strawberry-700' :
-                idx % 5 === 1 ? 'text-primary-800' :
-                idx % 5 === 2 ? 'text-lemon-700' :
-                idx % 5 === 3 ? 'text-skyblue-700' :
-                idx % 5 === 4 ? 'text-grape-700' :
-                'text-peach-700'
-              ) : ''
+              route.name === tab.name ? 'text-primary-700' : ''
             ]"
           />
           <span

@@ -11,6 +11,7 @@ import {
   ORDER_STATUSES,
   ORDER_CATEGORY_ICONS,
   ORDER_CATEGORY_COLORS,
+  CURRENCIES,
 } from '@/utils/constants'
 import {
   IconPlus,
@@ -22,7 +23,9 @@ import {
   IconFile,
 } from '@/components/icons'
 import {
-  formatNZD,
+  formatCurrency,
+  formatAsCNY,
+  formatCNY,
   getOrderStatusColor,
   formatRelativeTime,
   isUpcoming,
@@ -40,14 +43,14 @@ const editingItem = ref<OrderItem | undefined>(undefined)
 
 // 分类Tab颜色映射（8种不同颜色贴纸）
 const categoryTabColors: Record<string, { active: string; badge: string }> = {
-  '全部':       { active: 'bg-gradient-to-br from-ink-500 to-ink-700 text-white', badge: 'sticker-badge--grape' },
-  '国际机票':   { active: 'bg-gradient-to-br from-strawberry-300 to-strawberry-500 text-white', badge: 'sticker-badge--pink' },
-  '境内机票':   { active: 'bg-gradient-to-br from-skyblue-300 to-skyblue-500 text-white', badge: 'sticker-badge--sky' },
-  '酒店':       { active: 'bg-gradient-to-br from-grape-300 to-grape-500 text-white', badge: 'sticker-badge--grape' },
-  '租车':       { active: 'bg-gradient-to-br from-lemon-300 to-lemon-500 text-ink-800', badge: 'sticker-badge--lemon' },
-  '景点门票':   { active: 'bg-gradient-to-br from-primary-300 to-primary-500 text-white', badge: 'sticker-badge--mint' },
-  '徒步预约':   { active: 'bg-gradient-to-br from-peach-300 to-peach-500 text-white', badge: 'sticker-badge--peach' },
-  '轮渡票':     { active: 'bg-gradient-to-br from-skyblue-400 to-primary-400 text-white', badge: 'sticker-badge--sky' },
+  '全部':       { active: 'bg-gradient-to-br from-ink-500 to-ink-600 text-white', badge: 'sticker-badge--grape' },
+  '国际机票':   { active: 'bg-gradient-to-br from-strawberry-500 to-strawberry-600 text-white', badge: 'sticker-badge--pink' },
+  '境内机票':   { active: 'bg-gradient-to-br from-skyblue-500 to-skyblue-600 text-white', badge: 'sticker-badge--sky' },
+  '酒店':       { active: 'bg-gradient-to-br from-grape-500 to-grape-600 text-white', badge: 'sticker-badge--grape' },
+  '租车':       { active: 'bg-gradient-to-br from-lemon-500 to-lemon-600 text-ink-800', badge: 'sticker-badge--lemon' },
+  '景点门票':   { active: 'bg-gradient-to-br from-primary-500 to-primary-600 text-white', badge: 'sticker-badge--mint' },
+  '徒步预约':   { active: 'bg-gradient-to-br from-peach-500 to-peach-600 text-white', badge: 'sticker-badge--peach' },
+  '轮渡票':     { active: 'bg-gradient-to-br from-skyblue-500 to-skyblue-600 text-white', badge: 'sticker-badge--sky' },
 }
 
 // 状态贴纸颜色映射
@@ -99,10 +102,23 @@ const upcomingOrders = computed(() =>
   )
 )
 
-// 总金额（筛选后）
-const filteredTotal = computed(() =>
-  filteredOrders.value.reduce((sum, o) => sum + (o.price || 0), 0)
+// 总金额（筛选后，换算为人民币）
+const filteredTotalCNY = computed(() =>
+  filteredOrders.value.reduce((sum, o) => {
+    const rate = store.exchangeRates[o.currency || 'NZD'] ?? 1
+    return sum + (o.price || 0) * rate
+  }, 0)
 )
+
+// 按币种分组统计
+const currencyBreakdown = computed(() => {
+  const map = new Map<string, number>()
+  filteredOrders.value.forEach((o) => {
+    const cur = o.currency || 'NZD'
+    map.set(cur, (map.get(cur) || 0) + (o.price || 0))
+  })
+  return map
+})
 
 const openAdd = () => {
   if (!store.canEdit) return
@@ -145,14 +161,14 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
     <!-- ===== 页面标题 ===== -->
     <div class="page-header">
       <div>
-        <h1 class="page-title">🎫 订票台账手账</h1>
-        <p class="page-subtitle font-hand">
+        <h1 class="page-title">订票台账手账</h1>
+        <p class="page-subtitle">
           ~ 7大分类管理 · 状态一目了然 · 临近订单贴心提醒 ~
         </p>
       </div>
       <div class="hidden md:flex items-center gap-2">
-        <span class="sticker-badge sticker-badge--lemon font-hand text-sm">
-          📊 总计 {{ formatNZD(store.totalOrderAmount) }}
+        <span class="sticker-badge sticker-badge--lemon text-sm">
+          📊 总计 {{ formatCNY(store.totalOrderAmountCNY) }}
         </span>
       </div>
     </div>
@@ -161,47 +177,38 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
       <!-- 订单总数：薄荷 -->
       <div class="trip-card trip-card--mint p-4 pt-6 relative">
-        <div class="washi-tape washi-tape--mint !w-20 !h-5" />
-        <span class="doodle-corner top-3 right-3 text-lg">📋</span>
-        <span class="sticker-badge sticker-badge--mint !px-2 !py-0.5 !text-[10px] font-sticker">订单总数</span>
-        <div class="font-sticker text-3xl font-extrabold text-ink-800 mt-2" style="text-shadow: 2px 2px 0 rgba(159,220,156,0.4)">
+        <span class="sticker-badge sticker-badge--mint !px-2 !py-0.5 !text-[10px]">订单总数</span>
+        <div class="text-3xl font-extrabold text-ink-800 mt-2">
           {{ store.orders.length }}
         </div>
-        <div class="font-hand text-[11px] text-ink-500 mt-1">合计 {{ formatNZD(store.totalOrderAmount) }}</div>
+        <div class="text-[11px] text-ink-500 mt-1">合计 {{ formatCNY(store.totalOrderAmountCNY) }}</div>
       </div>
       <!-- 待预订：蜜桃 -->
       <div class="trip-card trip-card--pink p-4 pt-6 relative">
-        <div class="washi-tape washi-tape--pink !w-20 !h-5" />
-        <span class="doodle-corner top-3 right-3 text-lg">⏳</span>
-        <span class="sticker-badge sticker-badge--pink !px-2 !py-0.5 !text-[10px] font-sticker">待预订</span>
-        <div class="font-sticker text-3xl font-extrabold text-strawberry-600 mt-2" style="text-shadow: 2px 2px 0 rgba(255,202,217,0.5)">
+        <span class="sticker-badge sticker-badge--pink !px-2 !py-0.5 !text-[10px]">待预订</span>
+        <div class="text-3xl font-extrabold text-strawberry-600 mt-2">
           {{ statusStats.get('未预订') || 0 }}
         </div>
-        <div class="font-hand text-[11px] text-ink-500 mt-1">需要确认下单</div>
+        <div class="text-[11px] text-ink-500 mt-1">需要确认下单</div>
       </div>
       <!-- 已付款：柠檬 -->
       <div class="trip-card trip-card--lemon p-4 pt-6 relative">
-        <div class="washi-tape washi-tape--lemon !w-20 !h-5" />
-        <span class="doodle-corner top-3 right-3 text-lg">✅</span>
-        <span class="sticker-badge sticker-badge--lemon !px-2 !py-0.5 !text-[10px] font-sticker">已付款</span>
-        <div class="font-sticker text-3xl font-extrabold text-ink-800 mt-2" style="text-shadow: 2px 2px 0 rgba(255,228,74,0.5)">
+        <span class="sticker-badge sticker-badge--lemon !px-2 !py-0.5 !text-[10px]">已付款</span>
+        <div class="text-3xl font-extrabold text-ink-800 mt-2">
           {{ (statusStats.get('已付款') || 0) + (statusStats.get('已预订') || 0) }}
         </div>
-        <div class="font-hand text-[11px] text-ink-500 mt-1">等待出行使用</div>
+        <div class="text-[11px] text-ink-500 mt-1">等待出行使用</div>
       </div>
       <!-- 3天内出行：葡萄 -->
       <div class="trip-card trip-card--grape p-4 pt-6 relative">
-        <div class="washi-tape washi-tape--grape !w-20 !h-5" />
-        <span class="doodle-corner top-3 right-3 text-lg animate-sparkle">🚨</span>
-        <span class="sticker-badge sticker-badge--grape !px-2 !py-0.5 !text-[10px] font-sticker">3天内出行</span>
+        <span class="sticker-badge sticker-badge--grape !px-2 !py-0.5 !text-[10px]">3天内出行</span>
         <div
-          class="font-sticker text-3xl font-extrabold mt-2"
-          :class="upcomingOrders.length > 0 ? 'text-strawberry-600 animate-wiggle' : 'text-ink-400'"
-          style="text-shadow: 2px 2px 0 rgba(216,180,254,0.4)"
+          class="text-3xl font-extrabold mt-2"
+          :class="upcomingOrders.length > 0 ? 'text-strawberry-600' : 'text-ink-400'"
         >
           {{ upcomingOrders.length }}
         </div>
-        <div class="font-hand text-[11px] text-ink-500 mt-1">
+        <div class="text-[11px] text-ink-500 mt-1">
           {{ upcomingOrders.length > 0 ? '⚠️ 请提前确认哦~' : '暂无临近订单' }}
         </div>
       </div>
@@ -211,16 +218,13 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
     <div
       v-if="upcomingOrders.length > 0"
       class="trip-card trip-card--pink p-5 pt-8 relative"
-      style="animation: pulse-border 1.5s ease-in-out infinite; border-color: #fb4277 !important;"
+      style="border-color: #fb4277 !important;"
     >
-      <div class="washi-tape washi-tape--pink" />
-      <span class="doodle-corner top-3 right-4 text-2xl animate-sparkle">🚨</span>
-
       <div class="flex items-center gap-3 mb-4 flex-wrap">
         <span class="title-sticker title-sticker--pink text-base md:text-lg">
           🚨 临近出行订单提醒（3天内）
         </span>
-        <span class="sticker-badge sticker-badge--lemon !text-[11px] font-hand animate-wiggle">
+        <span class="sticker-badge sticker-badge--lemon !text-[11px]">
           记得确认哦~
         </span>
       </div>
@@ -230,17 +234,16 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
           v-for="o in upcomingOrders"
           :key="o.id"
           class="sticky-note sticky-note--pink px-4 py-3 flex items-center gap-2 cursor-pointer hover:scale-[1.03] transition-transform"
-          style="border: 2px dashed #fb4277; animation: pulse-border 2s ease-in-out infinite;"
           @click="openEdit(o)"
         >
-          <span class="text-2xl shrink-0 animate-wiggle">
+          <span class="text-2xl shrink-0">
             {{ ORDER_CATEGORY_ICONS[o.category] }}
           </span>
           <div class="min-w-0">
             <div class="font-bold text-ink-800 text-sm truncate max-w-[140px] md:max-w-[180px]">
               🚨 {{ o.title }}
             </div>
-            <div class="font-hand text-[11px] text-strawberry-700 mt-0.5 whitespace-nowrap">
+            <div class="text-[11px] text-strawberry-700 mt-0.5 whitespace-nowrap">
               {{ o.dateTime ? new Date(o.dateTime).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '' }}
             </div>
           </div>
@@ -250,8 +253,6 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
 
     <!-- ===== 操作 + 筛选区 ===== -->
     <div class="trip-card trip-card--sky p-4 md:p-5 pt-7 space-y-4 relative">
-      <div class="washi-tape washi-tape--sky" />
-
       <div class="flex items-center justify-between flex-wrap gap-3">
         <div class="flex items-center gap-2">
           <span class="title-sticker title-sticker--sky text-base md:text-lg">
@@ -259,11 +260,11 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
           </span>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-          <span class="sticker-badge sticker-badge--mint !text-[11px] font-hand">
+          <span class="sticker-badge sticker-badge--mint !text-[11px]">
             📋 {{ filteredOrders.length }} 条
           </span>
-          <span class="sticker-badge sticker-badge--lemon !text-[11px] font-hand">
-            💰 {{ formatNZD(filteredTotal) }}
+          <span class="sticker-badge sticker-badge--lemon !text-[11px]">
+            💰 {{ formatCNY(filteredTotalCNY) }}
           </span>
           <button
             v-if="store.canEdit"
@@ -277,7 +278,7 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
 
       <!-- 分类筛选：7种不同颜色的贴纸胶囊 -->
       <div>
-        <div class="font-hand text-[11px] text-ink-500 mb-2 flex items-center gap-1">
+        <div class="text-[11px] text-ink-500 mb-2 flex items-center gap-1">
           <span>📂</span> 按分类筛选
         </div>
         <div class="flex flex-wrap gap-1.5 md:gap-2">
@@ -289,13 +290,12 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
             :class="filterCategory === cat
               ? `${categoryTabColors[cat].active} shadow-sticker border-transparent`
               : 'bg-white text-ink-600 border-dashed border-ink-200/50 hover:border-strawberry-200 hover:bg-strawberry-50/50'"
-            :style="{ transform: `rotate(${catIdx % 3 === 0 ? '-0.8' : catIdx % 3 === 1 ? '0.6' : '-0.3'}deg)` }"
             @click="filterCategory = cat"
           >
             <span v-if="cat !== '全部'" class="mr-0.5">{{ ORDER_CATEGORY_ICONS[cat as OrderCategory] }}</span>
             {{ cat }}
             <span
-              class="ml-1 text-[9px] md:text-[10px] opacity-80 font-sticker"
+              class="ml-1 text-[9px] md:text-[10px] opacity-80"
             >({{ categoryStats.get(cat) || 0 }})</span>
           </button>
         </div>
@@ -303,7 +303,7 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
 
       <!-- 状态筛选 -->
       <div>
-        <div class="font-hand text-[11px] text-ink-500 mb-2 flex items-center gap-1">
+        <div class="text-[11px] text-ink-500 mb-2 flex items-center gap-1">
           <span>🏷️</span> 按状态筛选
         </div>
         <div class="flex flex-wrap gap-1.5 md:gap-2">
@@ -317,7 +317,6 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
                 ? '!bg-ink-700 !text-white !border-ink-600 shadow-sticker'
                 : `${statusBadgeMap[st]} shadow-sticker scale-105`
               : '!bg-white !text-ink-500 !border-ink-200 hover:!border-strawberry-200 hover:!bg-strawberry-50'"
-            :style="{ transform: `rotate(${stIdx % 2 === 0 ? '-0.5' : '0.5'}deg)` }"
             @click="filterStatus = st"
           >
             {{
@@ -337,10 +336,9 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
       v-if="filteredOrders.length === 0"
       class="trip-card trip-card--lemon p-8 md:p-10 text-center pt-10 relative"
     >
-      <div class="washi-tape washi-tape--lemon" />
       <div class="sticky-note sticky-note--mint mx-auto max-w-sm py-6">
         <div class="text-5xl mb-2 opacity-80">🎫</div>
-        <p class="font-hand text-ink-700 text-sm">
+        <p class="text-ink-700 text-sm">
           {{ store.orders.length === 0 ? '还没有任何订单记录哦~' : '当前筛选条件下没有订单呢' }}
         </p>
         <button
@@ -363,17 +361,13 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
           'ring-4 ring-strawberry-300 ring-opacity-70': order.dateTime && isUpcoming(order.dateTime, 3)
         }"
         :style="{
-          transform: `rotate(${oIdx % 2 === 0 ? '-0.3' : '0.3'}deg)`,
-          animation: order.dateTime && isUpcoming(order.dateTime, 3) ? 'pulse-border 1.5s ease-in-out infinite' : 'none'
+          animation: 'none'
         }"
       >
-        <!-- 柠檬黄胶带 -->
-        <div class="washi-tape washi-tape--lemon" />
-
         <!-- 临近徽章 -->
         <span
           v-if="order.dateTime && isUpcoming(order.dateTime, 3)"
-          class="absolute top-3 left-4 sticker-badge sticker-badge--pink !px-2 !py-0.5 !text-[10px] animate-wiggle z-10"
+          class="absolute top-3 left-4 sticker-badge sticker-badge--pink !px-2 !py-0.5 !text-[10px] z-10"
         >
           🚨 临近
         </span>
@@ -406,7 +400,7 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
                   </h3>
                   <!-- 状态贴纸徽章（不同颜色）-->
                   <span
-                    class="sticker-badge !px-2.5 !py-0.5 !text-[10px] font-sticker cursor-pointer shrink-0 hover:scale-110 transition-transform"
+                    class="sticker-badge !px-2.5 !py-0.5 !text-[10px] cursor-pointer shrink-0 hover:scale-110 transition-transform"
                     :class="statusBadgeMap[order.status] || 'sticker-badge--grape'"
                     :title="store.canEdit ? '点击切换状态' : ''"
                     @click="cycleStatus(order)"
@@ -420,7 +414,7 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
                 </div>
 
                 <!-- 详情信息 -->
-                <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-hand text-ink-600">
+                <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-600">
                   <span v-if="order.dateTime" class="inline-flex items-center gap-1">
                     🕒 {{ new Date(order.dateTime).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit' }) }}
                   </span>
@@ -436,9 +430,12 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
               <!-- 价格贴纸（大数字）-->
               <div class="text-right shrink-0">
                 <div class="sticker-badge sticker-badge--lemon !px-3 !py-1">
-                  <span class="font-sticker text-lg md:text-xl font-extrabold text-ink-800">
-                    {{ formatNZD(order.price || 0) }}
+                  <span class="text-lg md:text-xl font-extrabold text-ink-800">
+                    {{ formatCurrency(order.price || 0, order.currency || 'NZD') }}
                   </span>
+                </div>
+                <div v-if="(order.currency || 'NZD') !== 'CNY' && order.price > 0" class="mt-1 text-[10px] text-ink-500">
+                  ≈ {{ formatAsCNY(order.price || 0, order.currency || 'NZD', store.exchangeRates) }}
                 </div>
               </div>
             </div>
@@ -446,7 +443,7 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
             <!-- 备注：便签风 -->
             <div
               v-if="order.notes"
-              class="mt-3 p-3 rounded-xl bg-grape-50/70 border-2 border-dashed border-grape-200 text-xs font-hand text-ink-600 whitespace-pre-line leading-relaxed"
+              class="mt-3 p-3 rounded-xl bg-grape-50/70 border-2 border-dashed border-grape-200 text-xs text-ink-600 whitespace-pre-line leading-relaxed"
             >
               📝 {{ order.notes }}
             </div>
@@ -459,13 +456,13 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
                 @click="downloadVoucher(order.voucher!)"
               >
                 <IconFile :size="11" />
-                <span class="truncate max-w-[150px] font-hand">{{ order.voucher.name }}</span>
+                <span class="truncate max-w-[150px]">{{ order.voucher.name }}</span>
                 <IconDownload :size="10" />
               </button>
             </div>
 
             <!-- 溯源 -->
-            <div class="mt-2.5 text-[10px] font-hand text-ink-400 flex items-center gap-2 flex-wrap">
+            <div class="mt-2.5 text-[10px] text-ink-400 flex items-center gap-2 flex-wrap">
               <span>✍️ 创建：{{ order.createdBy || '-' }}</span>
               <span>·</span>
               <span>🔄 更新：{{ order.updatedBy || '-' }} · {{ formatRelativeTime(order.updatedAt || order.createdAt || 0) }}</span>
@@ -507,13 +504,4 @@ const downloadVoucher = (v: NonNullable<OrderItem['voucher']>) => {
   </div>
 </template>
 
-<style>
-@keyframes pulse-border {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(251, 66, 119, 0.4), 3px 5px 0 rgba(63, 59, 50, 0.12);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(251, 66, 119, 0), 3px 5px 0 rgba(63, 59, 50, 0.12);
-  }
-}
-</style>
+

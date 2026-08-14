@@ -2,7 +2,8 @@
 // 通用工具函数集合
 // ================================
 import dayjs from 'dayjs'
-import type { WeatherIconType } from '@/types'
+import type { WeatherIconType, Currency } from '@/types'
+import { CURRENCIES, DEFAULT_EXCHANGE_RATES } from '@/utils/constants'
 
 /**
  * 生成唯一ID（UUID v4 简化版，足够前端使用）
@@ -208,10 +209,53 @@ export const generateWeatherAdvice = (
 }
 
 /**
- * 新西兰元格式化
+ * 新西兰元格式化（保留向后兼容）
  */
 export const formatNZD = (amount: number): string => {
   return `NZ$${amount.toFixed(2)}`
+}
+
+/**
+ * 按指定币种格式化金额
+ */
+export const formatCurrency = (amount: number, currency: Currency = 'NZD'): string => {
+  const info = CURRENCIES.find((c) => c.code === currency)
+  const symbol = info?.symbol || ''
+  return `${symbol}${amount.toFixed(2)}`
+}
+
+/**
+ * 将某币种金额换算为人民币
+ * @param amount 原始金额
+ * @param currency 原始币种
+ * @param rates 汇率表（1外币 = X人民币）
+ */
+export const convertToCNY = (
+  amount: number,
+  currency: Currency = 'NZD',
+  rates: Record<Currency, number> = DEFAULT_EXCHANGE_RATES
+): number => {
+  const rate = rates[currency] ?? 1
+  return amount * rate
+}
+
+/**
+ * 将某币种金额换算为人民币并格式化显示
+ */
+export const formatAsCNY = (
+  amount: number,
+  currency: Currency = 'NZD',
+  rates: Record<Currency, number> = DEFAULT_EXCHANGE_RATES
+): string => {
+  const cny = convertToCNY(amount, currency, rates)
+  return `¥${cny.toFixed(2)}`
+}
+
+/**
+ * 格式化人民币金额
+ */
+export const formatCNY = (amount: number): string => {
+  return `¥${amount.toFixed(2)}`
 }
 
 /**

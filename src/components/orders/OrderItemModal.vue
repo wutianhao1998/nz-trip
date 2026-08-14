@@ -10,14 +10,15 @@ import {
   IconX,
   IconFile,
 } from '@/components/icons'
-import type { OrderItem, OrderCategory, OrderStatus, OrderVoucher } from '@/types'
+import type { OrderItem, OrderCategory, OrderStatus, OrderVoucher, Currency } from '@/types'
 import {
   ORDER_CATEGORIES,
   ORDER_STATUSES,
   ORDER_CATEGORY_ICONS,
   ORDER_CATEGORY_COLORS,
+  CURRENCIES,
 } from '@/utils/constants'
-import { generateId, fileToDataURL, formatFileSize } from '@/utils'
+import { generateId, fileToDataURL, formatFileSize, formatCurrency, formatAsCNY } from '@/utils'
 import dayjs from 'dayjs'
 
 interface Props {
@@ -36,6 +37,7 @@ const title = ref('')
 const orderNo = ref('')
 const dateTime = ref('')
 const price = ref<number>(0)
+const currency = ref<Currency>('NZD')
 const contact = ref('')
 const status = ref<OrderStatus>('未预订')
 const notes = ref('')
@@ -55,6 +57,7 @@ watch(
         ? dayjs(it.dateTime).format('YYYY-MM-DDTHH:mm')
         : ''
       price.value = it.price
+      currency.value = it.currency || 'NZD'
       contact.value = it.contact
       status.value = it.status
       notes.value = it.notes
@@ -65,6 +68,7 @@ watch(
       orderNo.value = ''
       dateTime.value = ''
       price.value = 0
+      currency.value = 'NZD'
       contact.value = ''
       status.value = '未预订'
       notes.value = ''
@@ -118,6 +122,7 @@ const handleSave = () => {
     orderNo: orderNo.value.trim(),
     dateTime: isoDate,
     price: Number(price.value) || 0,
+    currency: currency.value,
     contact: contact.value.trim(),
     status: status.value,
     notes: notes.value.trim(),
@@ -198,18 +203,32 @@ const handleSave = () => {
         </div>
       </div>
 
-      <!-- 价格 + 状态 -->
+      <!-- 价格 + 币种 + 状态 -->
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1.5">价格 (NZD 纽币)</label>
-          <input
-            v-model.number="price"
-            type="number"
-            min="0"
-            step="0.01"
-            class="input-base"
-            placeholder="0.00"
-          />
+          <label class="block text-xs font-medium text-gray-600 mb-1.5">价格金额</label>
+          <div class="flex gap-2">
+            <input
+              v-model.number="price"
+              type="number"
+              min="0"
+              step="0.01"
+              class="input-base flex-1"
+              placeholder="0.00"
+            />
+            <select
+              v-model="currency"
+              class="select-base !w-28 !py-3 text-sm shrink-0"
+            >
+              <option v-for="cur in CURRENCIES" :key="cur.code" :value="cur.code">
+                {{ cur.flag }} {{ cur.code }}
+              </option>
+            </select>
+          </div>
+          <!-- 人民币换算预览 -->
+          <div v-if="currency !== 'CNY' && price > 0" class="mt-1.5 text-xs text-gray-500">
+            ≈ {{ formatAsCNY(price, currency) }}
+          </div>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1.5">订单状态</label>

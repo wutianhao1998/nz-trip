@@ -4,7 +4,9 @@
 // ================================
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
-import { formatDateCN, formatNZD } from '@/utils'
+import { formatDateCN, formatCurrency, formatCNY, convertToCNY } from '@/utils'
+import { DEFAULT_EXCHANGE_RATES } from '@/utils/constants'
+import type { Currency } from '@/types'
 
 /**
  * 将指定 DOM 元素导出为 PDF（A4 纵向）
@@ -69,7 +71,7 @@ export const exportFullTripPDF = async (
     days: number
   },
   daySchedules: { date: string; items: unknown[] }[],
-  orders: { title: string; category: string; status: string; dateTime: string; price: number }[],
+  orders: { title: string; category: string; status: string; dateTime: string; price: number; currency?: string }[],
   notices: { title: string; content: string }[],
   filename: string = '新西兰旅行规划'
 ): Promise<boolean> => {
@@ -147,14 +149,14 @@ export const exportFullTripPDF = async (
     `
     const tbody = document.createElement('tbody')
     orders.forEach((o) => {
-      total += o.price || 0
+      total += convertToCNY(o.price || 0, (o.currency || 'NZD') as Currency, DEFAULT_EXCHANGE_RATES)
       const tr = document.createElement('tr')
       tr.innerHTML = `
         <td style="padding:6px 10px;border:1px solid #fde68a;">${o.category}</td>
         <td style="padding:6px 10px;border:1px solid #fde68a;">${o.title}</td>
         <td style="padding:6px 10px;border:1px solid #fde68a;">${o.dateTime || '-'}</td>
         <td style="padding:6px 10px;border:1px solid #fde68a;">${o.status}</td>
-        <td style="padding:6px 10px;border:1px solid #fde68a;text-align:right;">${formatNZD(o.price || 0)}</td>
+        <td style="padding:6px 10px;border:1px solid #fde68a;text-align:right;">${formatCurrency(o.price || 0, (o.currency || 'NZD') as Currency)}</td>
       `
       tbody.appendChild(tr)
     })
@@ -162,7 +164,7 @@ export const exportFullTripPDF = async (
     orderDiv.appendChild(table)
     const totalDiv = document.createElement('div')
     totalDiv.style.cssText = 'margin-top:10px;text-align:right;font-weight:600;color:#c2410c;'
-    totalDiv.textContent = `💰 订单合计：${formatNZD(total)}`
+    totalDiv.textContent = `💰 订单合计（折合人民币）：${formatCNY(total)}`
     orderDiv.appendChild(totalDiv)
   }
   temp.appendChild(orderDiv)

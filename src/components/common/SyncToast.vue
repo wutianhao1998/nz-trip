@@ -28,8 +28,7 @@ const statusStickerClass = computed(() => {
     <div
       class="no-print fixed bottom-[calc(80px+env(safe-area-inset-bottom))] md:bottom-8 left-1/2 -translate-x-1/2 z-40
              px-4 py-2 rounded-full flex items-center gap-2
-             font-bold text-xs md:text-sm border-2 border-dashed shadow-sticker-sm backdrop-blur-md
-             animate-float"
+             font-bold text-xs md:text-sm border-2 border-dashed shadow-sticker-sm backdrop-blur-md"
       :class="statusStickerClass"
       style="font-family: 'Baloo 2', 'ZCOOL KuaiLe', sans-serif"
     >

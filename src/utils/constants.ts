@@ -1,7 +1,7 @@
 // ================================
 // 应用常量配置
 // ================================
-import type { NZTag, TransportType, OrderCategory, OrderStatus, DifficultyLevel } from '@/types'
+import type { NZTag, TransportType, OrderCategory, OrderStatus, DifficultyLevel, Currency } from '@/types'
 
 // ---- 新西兰专属标签列表 ----
 export const NZ_TAGS: NZTag[] = [
@@ -46,6 +46,31 @@ export const ORDER_CATEGORY_COLORS: Record<OrderCategory, string> = {
 
 // ---- 订单状态列表 ----
 export const ORDER_STATUSES: OrderStatus[] = ['未预订', '已预订', '已付款', '已核销']
+
+// ---- 支持的币种列表 ----
+export interface CurrencyInfo {
+  code: Currency
+  name: string
+  symbol: string
+  flag: string
+}
+
+export const CURRENCIES: CurrencyInfo[] = [
+  { code: 'NZD', name: '新西兰元', symbol: 'NZ$', flag: '🇳🇿' },
+  { code: 'CNY', name: '人民币', symbol: '¥', flag: '🇨🇳' },
+  { code: 'USD', name: '美元', symbol: 'US$', flag: '🇺🇸' },
+  { code: 'AUD', name: '澳元', symbol: 'A$', flag: '🇦🇺' },
+  { code: 'EUR', name: '欧元', symbol: '€', flag: '🇪🇺' },
+]
+
+/** 各币种对人民币的汇率（1单位外币 = X人民币），用户可在设置中调整 */
+export const DEFAULT_EXCHANGE_RATES: Record<Currency, number> = {
+  NZD: 4.3,
+  CNY: 1,
+  USD: 7.1,
+  AUD: 4.7,
+  EUR: 7.8,
+}
 
 // ---- 新西兰主要目的地城市（带坐标用于天气API） ----
 export interface NZCity {
@@ -151,6 +176,7 @@ export const STORAGE_KEYS = {
   MESSAGES: 'nz_trip_messages',
   WEATHER_CACHE: 'nz_trip_weather_cache',
   OFFLINE_QUEUE: 'nz_trip_offline_queue',
+  EXCHANGE_RATES: 'nz_trip_exchange_rates',
 }
 
 // ---- 协同房间默认 ID（可分享给同伴加入同一行程）----

@@ -82,6 +82,9 @@ export type OrderCategory =
 /** 订单状态 */
 export type OrderStatus = '未预订' | '已预订' | '已付款' | '已核销';
 
+/** 支持的币种 */
+export type Currency = 'NZD' | 'CNY' | 'USD' | 'AUD' | 'EUR';
+
 /** 订单凭证 */
 export interface OrderVoucher {
   name: string;      // 文件名
@@ -97,7 +100,8 @@ export interface OrderItem {
   title: string;           // 标题
   orderNo: string;         // 订单号
   dateTime: string;        // 出行/使用时间 ISO格式
-  price: number;           // 价格（NZD纽币）
+  price: number;           // 价格金额
+  currency: Currency;      // 支付币种
   contact: string;         // 联系人信息
   voucher?: OrderVoucher;  // 凭证附件
   status: OrderStatus;     // 状态

@@ -21,7 +21,12 @@ import {
   deepClone,
   generateDateRange,
 } from '@/utils'
-import { STORAGE_KEYS, DEFAULT_TRIP_DURATION } from '@/utils/constants'
+import {
+  STORAGE_KEYS,
+  DEFAULT_TRIP_DURATION,
+  DEFAULT_EXCHANGE_RATES,
+} from '@/utils/constants'
+import type { Currency } from '@/types'
 import dayjs from 'dayjs'
 import {
   isSupabaseReady,
@@ -92,6 +97,9 @@ export const useTripStore = defineStore('trip', () => {
   const isSyncing = ref<boolean>(false)
   const lastSyncAt = ref<number>(0)
 
+  // ---- 汇率表（各币种对人民币，用户可调整）----
+  const exchangeRates = ref<Record<Currency, number>>({ ...DEFAULT_EXCHANGE_RATES })
+
   // ---- 离线操作队列 ----
   interface OfflineOp {
     id: string
@@ -150,10 +158,53 @@ export const useTripStore = defineStore('trip', () => {
     return orders.value.filter((o) => o.status === '未预订').length
   })
 
-  /** 订单总金额 */
+  /** 订单总金额（原始各币种之和，仅作参考） */
   const totalOrderAmount = computed(() => {
     return orders.value.reduce((sum, o) => sum + (o.price || 0), 0)
   })
+
+  /** 订单总金额（全部换算为人民币） */
+  const totalOrderAmountCNY = computed(() => {
+    return orders.value.reduce((sum, o) => {
+      const cur = (o.currency || 'NZD') as Currency
+      const rate = exchangeRates.value[cur] ?? 1
+      return sum + (o.price || 0) * rate
+    }, 0)
+  })
+
+  /** 更新汇率 */
+  const updateExchangeRate = (currency: Currency, rate: number) => {
+    exchangeRates.value = { ...exchangeRates.value, [currency]: rate }
+    saveExchangeRatesToLocal()
+  }
+
+  /** 批量更新汇率 */
+  const updateExchangeRates = (rates: Record<Currency, number>) => {
+    exchangeRates.value = { ...exchangeRates.value, ...rates }
+    saveExchangeRatesToLocal()
+  }
+
+  /** 汇率存本地 */
+  const saveExchangeRatesToLocal = () => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.EXCHANGE_RATES, JSON.stringify(exchangeRates.value))
+    } catch (e) {
+      console.error('[Store] 汇率本地保存失败:', e)
+    }
+  }
+
+  /** 从本地加载汇率 */
+  const loadExchangeRatesFromLocal = () => {
+    try {
+      const str = localStorage.getItem(STORAGE_KEYS.EXCHANGE_RATES)
+      if (str) {
+        const parsed = JSON.parse(str)
+        exchangeRates.value = { ...DEFAULT_EXCHANGE_RATES, ...parsed }
+      }
+    } catch (e) {
+      console.error('[Store] 汇率本地加载失败:', e)
+    }
+  }
 
   /** 物资清单已备齐数量 */
   const packedInventoryCount = computed(() => {
@@ -323,6 +374,8 @@ export const useTripStore = defineStore('trip', () => {
       if (userStr && !currentUser.value) {
         currentUser.value = JSON.parse(userStr) as Collaborator
       }
+      // 加载汇率
+      loadExchangeRatesFromLocal()
     } catch (e) {
       console.error('[Store] 本地加载失败:', e)
     }
@@ -708,6 +761,7 @@ export const useTripStore = defineStore('trip', () => {
     isOnline,
     isSyncing,
     lastSyncAt,
+    exchangeRates,
     // Getters
     totalTripDays,
     tripDateList,
@@ -716,6 +770,7 @@ export const useTripStore = defineStore('trip', () => {
     paidOrderCount,
     pendingOrderCount,
     totalOrderAmount,
+    totalOrderAmountCNY,
     packedInventoryCount,
     totalInventoryCount,
     canEdit,
@@ -736,6 +791,8 @@ export const useTripStore = defineStore('trip', () => {
     upsertOrderItem,
     deleteOrderItem,
     updateOrderStatus,
+    updateExchangeRate,
+    updateExchangeRates,
     updateNoticeField,
     updateDailyNote,
     toggleInventoryItem,
